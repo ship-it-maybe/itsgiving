@@ -1,0 +1,10 @@
+# personal data — never commit: your face baseline, per-session numbers, call recordings
+calibration.json
+calibration_*.json
+diag/
+calls/
+assets/_unused/
+# environment
+venv/
+__pycache__/
+*.pyc

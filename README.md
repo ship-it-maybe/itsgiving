@@ -254,3 +254,47 @@ checks.
 
 Want to change **what sets off what**? `decide()`.
 Want to change **how easily it goes off**? `Z`, `FLOOR` and `ARM`.
+
+---
+
+## What this fork changes
+
+`its_giving_v2.py` was reworked around one awkward setup — a webcam above and to the side of the screen, on
+Windows — and most of it is useful anywhere.
+
+**Calibration**
+- Two phases: 7 s bored face at the camera (your neutral), then 8 s of looking around your screen as you
+  normally do, so ordinary head and eye movement lands inside sigma instead of firing memes.
+- Head turn is measured on a scale that stays linear when you rest turned away from the lens, and must exceed
+  both a fixed threshold and your own normal head wandering.
+- The squint floor means "this far above *your* resting squint"; eyes dropped to read the screen don't count.
+- A geometric nose-scrunch channel (upper lip riding up to the nose tip) for faces/angles where the
+  `noseSneer` blendshape reads a flat zero. It learns its neutral from the first ~200 frames.
+- `calibration.json` is personal data and is now actually gitignored.
+
+**Poses**
+- `DELAY` is in seconds per pose, not frames, so it behaves the same at 10 fps and at 30.
+- New: `hello` (wave an open palm beside your head), `laugh`, `hands_on_hips`, `nihuya` (two palms held up
+  facing each other), `shifty_eyes` (long left-right eye sweeps; off unless you add an asset).
+- `talking_to_wall` is now "index finger jabbing at something off to the side"; `cover_nose` works with one
+  palm and when the hand hides the face from the detector; `hand_up` needs the palm held still.
+- A pose with no file in `assets/` is switched off — delete a file to disable its pose. No more placeholders.
+
+**Assets**
+- A folder `assets/<pose>/` of numbered images is a sequence (`2_900.png` = hold frame 2 for 900 ms).
+- Files named `<pose>~anything.gif` form a pool; one is picked at random each time the pose fires.
+- `fetch_memes.ps1` downloads the set this fork is tuned for.
+
+**Pipeline**
+- Camera capture, detection and rendering run in separate threads: the call gets the camera's own frame rate
+  whatever the detectors manage, and the three detectors run side by side.
+- The preview is mirrored; the virtual camera gets the unmirrored picture, so meme captions read correctly.
+- Detection runs on a 480 px copy; capture and output stay at the camera's full size (`--size`, default 1280x720).
+- On Windows the process opts out of background throttling, so it keeps its speed when minimised behind Zoom.
+- `--diag` writes `diag/diag_<timestamp>.csv`: every number `decide()` saw, per frame, plus a per-pose tally on
+  exit — the way to find out *why* something fired.
+
+**Windows notes**
+- Put the repo on an ASCII-only path: MediaPipe cannot open model files under a path with non-Latin characters.
+- If `pip` fails with `CERTIFICATE_VERIFY_FAILED` (an antivirus re-signing HTTPS), use
+  `pip install --use-feature=truststore -r requirements.txt` rather than turning verification off.
